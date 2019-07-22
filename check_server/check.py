@@ -6,7 +6,7 @@
 import hashlib
 import base64
 
-sleep_time  = 120
+sleep_time  = 300
 debug = True
 headers = {"User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36"}
 
@@ -56,10 +56,7 @@ def get_score():
     user_scores = res.split('|')
     print "******************************************************************"
     res = ''
-    i = 0
-    for user_score in user_scores:
-	res += (user_id[i] + ":" + user_score).ljust(20,'*')
-	i += 1
+
     print res
     print "******************************************************************" 
     return user_scores
@@ -68,80 +65,30 @@ def write_score(scores):
     scores = '|'.join(scores)
     res = http('get',flag_server,8080,'/score.php?key=%s&write=1&score=%s'%(key,scores),'',headers)
     if res == "success":
-	return True
+        return True
     else:   
-	print res
-	raise ValueError
+        print res
+        raise ValueError
 
 class check():
-    def __init__(self):
-	print "checking host: "+host
-
-    def index_check(self):
-	res = http('get',host,port,'/web/?time=%s'%str(my_time),'',headers)
-	if '网校课程' in res:
-	    return True
-	if debug:
-	    print "[fail!] index_fail"
-	return False
-	
-
-    def test_check(self):
-	res = http('get',host,port,'/web/teacher','',headers)
-	if 'teacher' in res:
-	    return True
-	if debug:
-	    print "[fail!] test_fail"
-	return False
-
-
-    def test_check_2(self):
-	headers['Cookie'] = ''
-	data = 'key=1'
-	res = http('get',host,port,'/web/register?goto=/web/teacher',data,headers)
-	if '邮箱地址' in res:
-	    return True
-	if debug:
-	    print "[fail!] test_2_fail"
-	return False
-	
-
-    def login_check(self):
-	headers['Cookie'] = 'PHPSESSID=ujg0tpds1u9d23b969f2duj5c7;'
-	headers['X-Requested-With'] = 'XMLHttpRequest'
-	res = http('post',host,port,'/admin/login/index.html','username=admin&password=admin&verify=7480',headers)
-	if '"status":1' in res:
-	    return True
-	if debug:
-	    print "[fail!] login_fail"
-	return False
-
-    def admin_check(self):
-	data = 'eval(666)'
-	headers['Cookie'] = 'PHPSESSID=ujg0tpds1u9d23b969f2duj5c7;'
-    	res = http('get',host,port,'/admin/tools/database?type=export',data,headers)
-	tmp = http('get',host,port,'/admin/login/loginout.html','',headers)
-	if 'qq3479015851_article_type' in res:
-	    return True
-	if debug:
-	    print "[fail!] admin_fail"
-	return False
     
+    def index_check(self):
+        res = http('get',host,port,'/index.php?file=%s'%str(my_time),'',headers)
+        if 'perspi' in res:
+            return True
+        if debug:
+            print "[fail!] index_fail"
+        return False
 
 def server_check():
     try:
-	a = check()
-	if not a.index_check():
-	    return False
-	if not a.test_check():
-	    return False
-	if not a.test_check_2():
-	    return False	
-	return True
+        a = check()
+        if not a.index_check():
+            return False
+        return True
     except Exception,e:
-	print e
-	return False
-
+        print e
+        return False
 
 game_round = 0
 while True:
@@ -150,14 +97,14 @@ while True:
     scores = []
     print "--------------------------- round %d -------------------------------"%game_round
     for host in hosts:
-	print "---------------------------------------------------------------"
-	host = host[:-1]
-	if server_check():
-	    print "Host: "+host+" seems ok"
-	    scores.append("1")
+        print "---------------------------------------------------------------"
+        host = host[:-1]
+        if server_check():
+            print "Host: "+host+" seems ok"
+            scores.append("0")
         else:
-	    print "Host: "+host+" seems down"
-	    scores.append("-1")
+            print "Host: "+host+" seems down"
+            scores.append("-10")
     game_round += 1
     write_score(scores)
     time.sleep(sleep_time)
